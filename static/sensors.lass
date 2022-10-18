@@ -1,0 +1,11 @@
+(body
+ :font-size 14pt
+ :font-family sans-serif
+ :background (hex F0F0F0)
+ :margin 0)
+(article
+ :display block
+ :max-width 1000px
+ :margin 0 auto
+ :padding 1em
+ :background (hex F5F5F5))

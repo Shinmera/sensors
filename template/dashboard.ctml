@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sensors Dashboard</title>
+    <link rel="stylesheet" @href="/static/sensors/sensors.css">
+    <link rel="api-root" @href="sensors/api/sensors/"/>
+    <meta name="viewport" content="width=device-width"/>
+  </head>
+  <body>
+    <article id="measurements">
+      <h2>Latest:</h2>
+      <form class="panel single chart open-rate" data-type="line" action="measurement/get">
+        <canvas></canvas>
+      </form>
+    </article>
+    <article id="devices">
+      <h2>Devices:</h2>
+      <ul iterate="devices">
+        <li>
+          <span class="id" lquery="(text _id)">ID</span>
+          <span class="name" lquery="(text name)">NAME</span>
+        </li>
+      </ul>
+      <form @action="/api/sensors/device/create">
+        <input type="hidden" name="browser" value="true">
+        <input name="name" maxlength="64" placeholder="Name...">
+        <input type="submit" value="Add">
+      </form>
+    </article>
+    <script @src="/static/sensors/sensors.js"></script>
+  </body>
+</html>

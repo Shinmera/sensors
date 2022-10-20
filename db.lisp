@@ -1,35 +1,5 @@
 (in-package #:sensors)
 
-(define-trigger db:connected ()
-  (db:create 'device
-             '((name (:varchar 64)))
-             :indices '(name))
-
-  (db:create 'measurement-type
-             '((name (:varchar 64))
-               (unit (:integer 1))
-               (max :float)
-               (min :float))
-             :indices '(name))
-
-  (db:create 'supported-type
-             '((device (:id device))
-               (type (:id measurement-type)))
-             :indices '(device))
-  
-  (db:create 'measurement
-             '((value :float)
-               (type (:id measurement-type))
-               (device (:id device))
-               (time (:integer 8)))
-             :indices '(type device time))
-
-  (make-measurement-type "temperature" :celsius -50 +50)
-  (make-measurement-type "humidity" :percent 0 100)
-  (make-measurement-type "co2" :ppm 200 5000)
-  (make-measurement-type "pressure" :hpa 600 1100)
-  (make-measurement-type "height" :m 0 2500))
-
 (defun unit-id (unit)
   (ecase unit
     ((0 :unknown) 0)
@@ -114,3 +84,33 @@
         (type
          (nreverse (dm:get 'measurement (db:query (:= 'type (dm:id (ensure-measurement-type type))))
                            :skip skip :amount amount :sort `(("time" :desc)))))))
+
+(define-trigger db:connected ()
+  (db:create 'device
+             '((name (:varchar 64)))
+             :indices '(name))
+
+  (db:create 'measurement-type
+             '((name (:varchar 64))
+               (unit (:integer 1))
+               (max :float)
+               (min :float))
+             :indices '(name))
+
+  (db:create 'supported-type
+             '((device (:id device))
+               (type (:id measurement-type)))
+             :indices '(device))
+  
+  (db:create 'measurement
+             '((value :float)
+               (type (:id measurement-type))
+               (device (:id device))
+               (time (:integer 8)))
+             :indices '(type device time))
+
+  (make-measurement-type "temperature" :celsius -50 +50)
+  (make-measurement-type "humidity" :percent 0 100)
+  (make-measurement-type "co2" :ppm 200 5000)
+  (make-measurement-type "pressure" :hpa 600 1100)
+  (make-measurement-type "height" :m 0 2500))

@@ -19,6 +19,8 @@
     (5 :m)))
 
 (defun make-measurement-type (name unit min max)
+  (when (dm:get-one 'measurement-type (db:query (:= 'name name)))
+    (error "Type named ~s already exists." name))
   (db:insert 'measurement-type `(("name" . ,name)
                                  ("unit" . ,(unit-id unit))
                                  ("min" . ,(float min 0d0))
@@ -41,6 +43,8 @@
 
 (defun make-device (name &rest types)
   (db:with-transaction ()
+    (when (dm:get-one 'device (db:query (:= 'name name)))
+      (error "Device named ~s already exists." name))
     (let ((id (db:insert 'device `(("name" . ,name)))))
       (dolist (type types)
         (db:insert 'supported-type `(("device" . ,id)
@@ -109,8 +113,9 @@
                (time (:integer 8)))
              :indices '(type device time))
 
-  (make-measurement-type "temperature" :celsius -50 +50)
-  (make-measurement-type "humidity" :percent 0 100)
-  (make-measurement-type "co2" :ppm 200 5000)
-  (make-measurement-type "pressure" :hpa 600 1100)
-  (make-measurement-type "height" :m 0 2500))
+  (ignore-errors
+   (make-measurement-type "temperature" :celsius -50 +50)
+   (make-measurement-type "humidity" :percent 0 100)
+   (make-measurement-type "co2" :ppm 200 5000)
+   (make-measurement-type "pressure" :hpa 600 1100)
+   (make-measurement-type "height" :m 0 2500)))

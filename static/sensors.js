@@ -278,6 +278,11 @@ class Sensors{
                         animation: false,
                         layout: {padding: 5},
                         legend: {display: true},
+                        elements: {
+                            point: {
+                                radius: 1
+                            }
+                        },
                         scales: {
                             yAxes: axes,
                             xAxes: [{

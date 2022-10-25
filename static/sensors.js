@@ -215,12 +215,17 @@ class Sensors{
             return date.getFullYear()+"."+(date.getMonth()+1)+"."+date.getDate()
                 +" "+date.getHours()+":"+date.getMinutes();
         };
+        let universalTime = ()=>{
+            let unix = Math.floor(Date.now() / 1000);
+            return unix+2208988800;
+        };
         var self = this;
         var ctx = element.querySelector("canvas").getContext("2d");
         var chart = null;
         var refresh = ()=>
-            self.apiCall(element.getAttribute("action"), element)
-            .then((r)=>{
+            self.apiCall(element.getAttribute("action"), {
+                "time-start": (universalTime()-(60*60*24*7))+""
+            }).then((r)=>{
                 let idx = {};
                 let findLabel = (id)=>{
                     for(const axis of chart.options.scales.yAxes){

@@ -227,9 +227,9 @@ class Sensors{
                 "time-start": (universalTime()-(60*60*24*7))+""
             }).then((r)=>{
                 let idx = {};
-                let findLabel = (id)=>{
+                let findAxis = (id)=>{
                     for(const axis of chart.options.scales.yAxes){
-                        if(axis.id === id) return axis.scaleLabel.labelString;
+                        if(axis.id === id) return axis;
                     }
                     return id;
                 };
@@ -239,23 +239,36 @@ class Sensors{
                     let type = t.device+"/"+t.type;
                     let id = idx[type];
                     if(id === undefined){
+                        let axis = findAxis("y"+t.type);
                         id = chart.config.data.datasets.length;
                         idx[type] = id;
+                        let color = [Math.max(0,axis.color[0]-(id-2)*10),
+                                     Math.max(0,axis.color[1]-(id-2)*10),
+                                     Math.max(0,axis.color[2]-(id-2)*10)];
                         chart.data.datasets.push({
                             data: [],
-                            label: t.device+"/"+findLabel("y"+t.type),
+                            backgroundColor: "rgb("+color[0]+","+color[1]+","+color[2]+")",
+                            label: t.device+"/"+axis.scaleLabel.labelString,
                             yAxisID: "y"+t.type
                         });
                     }
                     chart.data.datasets[id].data.push({x: t.time, y: t.value});
                 }
+                console.log(chart);
                 chart.update();
             });
         self.loadJS("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js")
-            .then(()=>self.loadJS("https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"))
             .then(()=>self.apiCall("type/get"))
             .then((r)=>{
                 let axes = [];
+                let colors = [[203, 67, 53],
+                              [125, 60, 152],
+                              [46, 134, 193],
+                              [19, 141, 117],
+                              [212, 172, 13],
+                              [186, 74, 0],
+                              [46, 64, 83]];
+                let i = 0;
                 for(const t of r.data){
                     axes.push({
                         type: "linear",
@@ -263,11 +276,13 @@ class Sensors{
                         min: t.min,
                         max: t.max,
                         id: "y"+t._id,
+                        color: colors[i],
                         scaleLabel: {
                             display: true,
                             labelString: t.name
                         }
                     });
+                    i = (i+1)%colors.length;
                 }
                 chart = new Chart(ctx, {
                     type: "scatter",

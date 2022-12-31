@@ -124,7 +124,7 @@ class Sensors{
                     fail(data);
                 }
             };
-            self.log("Sending request to",endpoint);
+            self.log("Sending request to",endpoint,[...formData]);
             request.open("POST", endpoint);
             request.send(formData);
         });
@@ -209,22 +209,26 @@ class Sensors{
         element.querySelector("a.new").addEventListener("click",make);
     }
 
+    universalTime(date){
+        let unix = Math.floor((date || Date.now()) / 1000);
+        return unix+2208988800;
+    }
+
     registerChart(element){
         let formatTimestamp = (universal)=>{
             let date = new Date((universal-2208988800)*1000);
             return date.getFullYear()+"."+(date.getMonth()+1)+"."+date.getDate()
                 +" "+date.getHours()+":"+date.getMinutes();
         };
-        let universalTime = ()=>{
-            let unix = Math.floor(Date.now() / 1000);
-            return unix+2208988800;
-        };
         var self = this;
         var ctx = element.querySelector("canvas").getContext("2d");
         var chart = null;
-        var refresh = ()=>
-            self.apiCall(element.getAttribute("action"), {
-                "time-start": (universalTime()-(60*60*24*7))+""
+        var options = {};
+        var refresh = (newOptions)=>{
+            var localOptions = newOptions || options;
+            return self.apiCall(element.getAttribute("action"), {
+                "time-start": (localOptions.start || (self.universalTime()-(60*60*24*7)))+"",
+                "time-stop": (localOptions.stop || self.universalTime())+""
             }).then((r)=>{
                 let idx = {};
                 let findAxis = (id)=>{
@@ -257,6 +261,7 @@ class Sensors{
                 console.log(chart);
                 chart.update();
             });
+        };
         self.loadJS("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js")
             .then(()=>self.apiCall("type/get"))
             .then((r)=>{
@@ -321,8 +326,14 @@ class Sensors{
                 refresh();
                 setInterval(refresh, 10000);
             });
-        [].forEach.call(element.querySelectorAll("select"), (el)=>{
-            el.addEventListener("change", refresh);
+        [].forEach.call(element.querySelectorAll("input"), (el)=>{
+            el.addEventListener("change", ()=>{
+                if(el.getAttribute("type") == "datetime-local")
+                    options[el.getAttribute("name")] = self.universalTime(new Date(el.value));
+                else
+                    options[el.getAttribute("name")] = el.value;
+                refresh();
+            });
         });
     }
 }

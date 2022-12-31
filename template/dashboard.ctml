@@ -8,9 +8,11 @@
   </head>
   <body>
     <article id="measurements">
-      <h2>Latest:</h2>
+      <h2>Data:</h2>
       <form class="panel single chart open-rate" data-type="line" action="measurement/get">
         <canvas></canvas>
+        Start: <input name="start" type="datetime-local">
+        End: <input name="end" type="datetime-local">
       </form>
     </article>
     <article id="devices">

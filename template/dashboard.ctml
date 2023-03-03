@@ -26,7 +26,7 @@
           <span class="id" lquery="(text _id)">ID</span>
           <a class="name" lquery="(text name)" @href="sensors/device/{0} device">NAME</a>
           <time class="last" lquery="(time (clip (sensors::last-measurement *) :time))">TIME</time>
-          <nav iterate="(device-measurement-types *)" class="measurement-types">
+          <nav iterate="(sensors::device-measurement-types *)" class="measurement-types">
             <a class="name" lquery="(text name)" @href="sensors/device/{0}/{1} device type">NAME</a>
           </nav>
         </li>

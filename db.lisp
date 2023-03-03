@@ -78,18 +78,16 @@
                  `(nreverse (dm:get 'measurement (db:query (:and ,@clauses
                                                                  (:>= 'time (car time))
                                                                  (:<= 'time (cdr time))))
-                                    :skip skip :amount amount :sort `(("time" :desc))))))
+                                    :skip skip :amount amount :sort `(("time" :desc)))))
+               (mapv (key val)
+                 `(map 'vector (lambda (object) (dm:id (,key object))) ,val)))
       (cond ((and types devices)
-             (query (:in 'type (loop for type in types
-                                     collect (dm:id (ensure-measurement-type type))))
-                    (:in 'device (loop for device in devices
-                                       collect (dm:id (ensure-measurement-type device))))))
+             (query (:any 'type (mapv ensure-measurement-type types))
+                    (:any 'device (mapv ensure-device devices))))
             (types
-             (query (:in 'type (loop for type in types
-                                     collect (dm:id (ensure-measurement-type type))))))
+             (query (:any 'type (mapv ensure-measurement-type types))))
             (devices
-             (query (:in 'device (loop for device in devices
-                                       collect (dm:id (ensure-measurement-type device))))))
+             (query (:any 'device (mapv ensure-device devices))))
             (T
              (query))))))
 
@@ -98,7 +96,7 @@
               :sort `(("time" :desc))))
 
 (defun device-measurement-types (device)
-  (dm:get (rdb:join (measurement-type _id) (supported-type type)) (db:query (:= device (dm:id (ensure-device device))))
+  (dm:get (rdb:join (measurement-type _id) (supported-type type)) (db:query (:= 'device (dm:id (ensure-device device))))
           :sort `(("name" :asc))))
 
 (define-trigger db:connected ()
@@ -147,16 +145,15 @@
 
 (defun import-db (file)
   (with-open-file (stream file :direction :input)
-    (db:with-transaction ()
-      (with-standard-io-syntax
-        (let (database (counter 0))
-          (flet ((insert (record)
-                   (ignore-errors
-                    (db:insert database (alexandria:alist-hash-table record)))
-                   (when (= 0 (mod (incf counter) 1000))
-                     (format *debug-io* "~d records processed~%" counter))))
-            (loop for expr = (read stream NIL #1='#:eof)
-                  until (eq expr #1#)
-                  do (etypecase expr
-                       (symbol (setf database expr))
-                       (list (insert expr))))))))))
+    (with-standard-io-syntax
+      (let (database (counter 0))
+        (flet ((insert (record)
+                 (with-simple-restart (continue "ignore")
+                   (db:insert database (alexandria:alist-hash-table record)))
+                 (when (= 0 (mod (incf counter) 1000))
+                   (format *debug-io* "~d records processed~%" counter))))
+          (loop for expr = (read stream NIL #1='#:eof)
+                until (eq expr #1#)
+                do (etypecase expr
+                     (symbol (setf database expr))
+                     (list (insert expr)))))))))

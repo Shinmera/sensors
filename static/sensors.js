@@ -223,13 +223,27 @@ class Sensors{
         var self = this;
         var ctx = element.querySelector("canvas").getContext("2d");
         var chart = null;
-        var options = {};
-        var refresh = (newOptions)=>{
-            var localOptions = newOptions || options;
-            return self.apiCall(element.getAttribute("action"), {
-                "time-start": (localOptions.start || (self.universalTime()-(60*60*24*7)))+"",
-                "time-stop": (localOptions.stop || self.universalTime())+""
-            }).then((r)=>{
+        var refresh = ()=>{
+            var data = new FormData();
+            [].forEach.call(element.querySelectorAll("input"), (el)=>{
+                switch(el.getAttribute("type")){
+                case "datetime-local":
+                    if(el.value)
+                        data.append(el.getAttribute("name"), self.universalTime(new Date(el.value)));
+                    break;
+                case "checkbox":
+                    if(el.checked)
+                        data.append(el.getAttribute("name"), el.value);
+                    break;
+                default:
+                    data.append(el.getAttribute("name"), el.value);
+                }
+            });
+            if(!data.has("time-start"))
+                data.append("time-start", (self.universalTime()-(60*60*24*7))+"");
+            if(!data.has("time-stop"))
+                data.append("time-stop", self.universalTime()+"");
+            return self.apiCall(element.getAttribute("action"), data).then((r)=>{
                 let idx = {};
                 let findAxis = (id)=>{
                     for(const axis of chart.options.scales.yAxes){
@@ -324,17 +338,10 @@ class Sensors{
                     }
                 });
                 refresh();
-                setInterval(refresh, 10000);
+                setInterval(refresh, 60000);
             });
-        [].forEach.call(element.querySelectorAll("input"), (el)=>{
-            el.addEventListener("change", ()=>{
-                if(el.getAttribute("type") == "datetime-local")
-                    options[el.getAttribute("name")] = self.universalTime(new Date(el.value));
-                else
-                    options[el.getAttribute("name")] = el.value;
-                refresh();
-            });
-        });
+        
+        [].forEach.call(element.querySelectorAll("input"), (el)=>el.addEventListener("change", refresh));
     }
 }
 

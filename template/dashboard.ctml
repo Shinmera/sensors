@@ -8,34 +8,91 @@
   </head>
   <body>
     <article id="measurements">
-      <h2>Data:</h2>
       <form class="panel single chart open-rate" data-type="line" action="measurement/get">
+        <header>
+          <h2>Data</h2>
+          <div class="controls">
+            <span class="element">
+              <label for="start">Start:</label>
+              <input name="start" type="datetime-local" id="start" lquery='(val (get-var "start"))'>
+            </span>
+            <span class="element">
+              <label for="end">End:</label>
+              <input name="end" type="datetime-local" id="end" lquery='(val (get-var "end"))'>
+            </span>
+            <span class="element">
+              Types:
+              <nav iterate="measurement-types">
+                <input type="checkbox" name="type[]" lquery='(val _id) (attr :id name) (attr :checked (equal name (get-var "type")))' />
+                <label class="name" lquery="(text name) (attr :for name)">NAME</label>
+              </nav>
+            </span>
+            <span class="element">
+              Devices:
+              <nav class="element" iterate="devices">
+                <input type="checkbox" name="device[]" lquery='(val _id) (attr :id name) (attr :checked (equal name (get-var "device")))' />
+                <label class="name" lquery="(text name) (attr :for name)">NAME</label>
+              </nav>
+            </span>
+          </div>
+        </header>
         <canvas></canvas>
-        Start: <input name="start" type="datetime-local">
-        End: <input name="end" type="datetime-local">
-        <nav iterate="measurement-types" class="measurement-types">
-          <input type="checkbox" name="type[]" lquery="(val _id)" />
-          <a class="name" lquery="(text name)" @href="sensors/type/{0} _id">NAME</a>
-        </nav>
       </form>
     </article>
     <article id="devices">
-      <h2>Devices:</h2>
-      <ul iterate="devices">
-        <li>
-          <span class="id" lquery="(text _id)">ID</span>
-          <a class="name" lquery="(text name)" @href="sensors/device/{0} device">NAME</a>
-          <time class="last" lquery="(time (clip (sensors::last-measurement *) :time))">TIME</time>
-          <nav iterate="(sensors::device-measurement-types *)" class="measurement-types">
-            <a class="name" lquery="(text name)" @href="sensors/device/{0}/{1} device type">NAME</a>
-          </nav>
+      <header>
+        <h2>Devices</h2>
+        <div class="controls">
+          <form @action="/api/sensors/device/create">
+            <input type="hidden" name="browser" value="true">
+            <input name="name" maxlength="64" placeholder="Name...">
+            <input type="submit" value="Add">
+          </form>
+        </div>
+      </header>
+      <ul class="devices table">
+        <li class="header">
+            <span class="id">ID</span>
+            <span class="name">Name</span>
+            <span class="types"></span>
+            <span class="last">Last Measurement</span>
         </li>
+        <c:splice iterate="devices">
+          <li>
+            <span class="id" lquery="(text _id)">ID</span>
+            <a class="name" lquery="(text name)" @href="sensors/?device={0} name">NAME</a>
+            <nav iterate="(sensors::device-measurement-types *)" class="types">
+              <a class="type" lquery="(text name)" @href="sensors/?device={0}&type={1} device type">NAME</a>
+            </nav>
+            <time class="last" lquery="(time (clip (sensors::last-measurement *) :time))">TIME</time>
+          </li>
+        </c:splice>
       </ul>
-      <form @action="/api/sensors/device/create">
-        <input type="hidden" name="browser" value="true">
-        <input name="name" maxlength="64" placeholder="Name...">
-        <input type="submit" value="Add">
-      </form>
+    </article>
+    <article id="measurement-types">
+      <header>
+        <h2>Measurement Types</h2>
+        <div class="controls">
+        </div>
+      </header>
+      <ul class="table types">
+        <li class="header">
+            <span class="id">ID</span>
+            <span class="name">Name</span>
+            <span class="unit">Unit</span>
+            <span class="min">Min</span>
+            <span class="max">Max</span>
+        </li>
+        <c:splice iterate="measurement-types">
+          <li>
+            <span class="id" lquery="(text _id)">ID</span>
+            <a class="name" lquery="(text name)" @href="sensors/?type={0} name">NAME</a>
+            <span class="unit" lquery="(text (sensors::id-unit unit))">UNIT</span>
+            <span class="min" lquery="(text min)">MIN</span>
+            <span class="max" lquery="(text max)">MAX</span>
+          </li>
+        </c:splice>
+      </ul>
     </article>
     <script @src="/static/sensors/sensors.js"></script>
   </body>

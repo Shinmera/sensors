@@ -72,7 +72,7 @@ class Sensors{
                 self.log("Loading", source);
                 var el = self.constructElement("script",{
                     attributes: {
-                        type: "text/javascript",
+                        type: "module",
                         crossorigin: "anonymous",
                         src: source
                     }
@@ -245,19 +245,13 @@ class Sensors{
                 data.append("time-stop", self.universalTime()+"");
             return self.apiCall(element.getAttribute("action"), data).then((r)=>{
                 let idx = {};
-                let findAxis = (id)=>{
-                    for(const axis of chart.options.scales.yAxes){
-                        if(axis.id === id) return axis;
-                    }
-                    return id;
-                };
                 chart.data.datasets = [];
                 
                 for(const t of r.data.measurements){
                     let type = t.device+"/"+t.type;
                     let id = idx[type];
                     if(id === undefined){
-                        let axis = findAxis("y"+t.type);
+                        let axis = chart.options.scales["y"+t.type];
                         id = chart.config.data.datasets.length;
                         idx[type] = id;
                         let color = [Math.max(0,axis.color[0]-(id-2)*10),
@@ -272,14 +266,13 @@ class Sensors{
                     }
                     chart.data.datasets[id].data.push({x: t.time, y: t.value});
                 }
-                console.log(chart);
                 chart.update();
             });
         };
-        self.loadJS("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js")
+        self.loadJS("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.umd.min.js")
             .then(()=>self.apiCall("type/get"))
             .then((r)=>{
-                let axes = [];
+                let scales = {};
                 let colors = [[203, 67, 53],
                               [125, 60, 152],
                               [46, 134, 193],
@@ -289,20 +282,27 @@ class Sensors{
                               [46, 64, 83]];
                 let i = 0;
                 for(const t of r.data){
-                    axes.push({
+                    scales["y"+t._id] = {
                         type: "linear",
                         position: "left",
-                        min: t.min,
-                        max: t.max,
+                        suggestedMin: t.min,
+                        suggestedMax: t.max,
                         id: "y"+t._id,
                         color: colors[i],
                         scaleLabel: {
                             display: true,
                             labelString: t.name
                         }
-                    });
+                    };
                     i = (i+1)%colors.length;
                 }
+                scales["x"] = {
+                    ticks: {
+                        userCallback: function(label, index, labels) {
+                            return formatTimestamp(label);
+                        }
+                    }
+                };
                 chart = new Chart(ctx, {
                     type: "scatter",
                     data: {
@@ -317,16 +317,7 @@ class Sensors{
                                 radius: 1
                             }
                         },
-                        scales: {
-                            yAxes: axes,
-                            xAxes: [{
-                                ticks: {
-                                    userCallback: function(label, index, labels) {
-                                        return formatTimestamp(label);
-                                    }
-                                }
-                            }]
-                        },
+                        scales: scales,
                         tooltips: {
                             callbacks: {
                                 label: function(context, data) {

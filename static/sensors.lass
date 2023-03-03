@@ -1,11 +1,68 @@
 (body
- :font-size 14pt
+ :font-size 16pt
  :font-family sans-serif
- :background (hex F0F0F0)
+ :background (hex F5F5F5)
  :margin 0)
 (article
  :display block
- :max-width 1000px
  :margin 0 auto
- :padding 1em
- :background (hex F5F5F5))
+ :padding 0
+ (header
+  :background (hex 151515)
+  :color (hex FEFEFE)
+  :padding 0.5em 1em
+  (h2
+   :margin 0))
+ (.chart
+  (.controls
+   :display flex
+   :flex-wrap wrap
+   (.element
+    :white-space nowrap
+    :margin-right 1em
+    (nav :display inline-block))))
+ (.table
+  :list-style none
+  :padding 0
+  :margin 0
+  (li.header
+   :background (hex D5D5D5))
+  ((:and li :hover)
+   :background (hex E5E5E5))
+  (li
+   :padding 0.2em 0.5em
+   :display flex
+   :align-items center
+   (>* :display inline-block
+       :margin 0.1em)
+   (.id :min-width 2em)
+   (.name :flex-grow 1
+          :white-space nowrap
+          :min-width 5em)))
+ (.devices
+  (li
+   (.types
+    :width 20em
+    (a :text-decoration none
+       :background (hex E0E0E0)
+       :display inline-block
+       :color (hex 808080)
+       :padding 0.1em 0.2em
+       :margin 0.05em
+       :border-radius 0.2em)
+    ((:and a :hover)
+     :background (hex C0C0C0)))))
+ (.types
+  (li
+   ((:or .min .max) :min-width 6em
+                    :text-align right))))
+(time
+ :font-variant-numeric tabular-nums)
+(input
+ :font-family inherit
+ :font-size inherit)
+(a
+ :color black
+ :text-decoration none)
+((:and a :hover)
+ :color blue)

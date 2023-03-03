@@ -7,7 +7,7 @@
                (:file "db")
                (:file "api")
                (:file "frontend"))
-  :depends-on (:i-sqlite
+  :depends-on ((:interface :database)
                (:interface :relational-database)
                :r-data-model
                :r-clip

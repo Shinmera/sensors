@@ -134,11 +134,13 @@
 
 (defun export-db (file)
   (with-open-file (stream file :direction :output :if-exists :supersede)
-    (flet ((output (record)
-             (format stream "~s~%" (alexandria:hash-table-alist record))))
-      (dolist (database '(device measurement-type supported-type measurement))
-        (format stream "~s~%" database)
-        (db:iterate 'device (db:query :all) #'output)))))
+    (with-standard-io-syntax
+      (let ((*print-right-margin* 10000000))
+        (flet ((output (record)
+                 (format stream "~s~%" (alexandria:hash-table-alist record))))
+          (dolist (database '(device measurement-type supported-type measurement))
+            (format stream "~s~%" database)
+            (db:iterate database (db:query :all) #'output)))))))
 
 (defun import-db (file)
   (with-open-file (stream file :direction :input)

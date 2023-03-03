@@ -38,6 +38,14 @@
     (db:id
      (dm:get-one 'measurement-type (db:query (:= '_id type))))))
 
+(defun edit-measurement-type (type &key name unit min max)
+  (let ((type (ensure-measurement-type type)))
+    (when name (setf (dm:field type "name") name))
+    (when unit (setf (dm:field type "unit") (unit-id unit)))
+    (when min (setf (dm:field type "min") (float min 0d0)))
+    (when max (setf (dm:field type "max") (float max 0d0)))
+    (dm:save type)))
+
 (defun list-measurement-types ()
   (dm:get 'measurement-type (db:query :all) :sort '(("name" :asc))))
 

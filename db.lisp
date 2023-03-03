@@ -119,3 +119,21 @@
    (make-measurement-type "co2" :ppm 200 5000)
    (make-measurement-type "pressure" :hpa 600 1100)
    (make-measurement-type "height" :m 0 2500)))
+
+(defun export-db (file)
+  (with-open-file (stream file :direction :output :if-exists :supersede)
+    (flet ((output (record)
+             (format stream "~s~%" (alexandria:hash-table-alist record))))
+      (dolist (database '(device measurement-type supported-type measurement))
+        (format stream "~s~%" database)
+        (db:iterate 'device (db:query :all) #'output)))))
+
+(defun import-db (file)
+  (with-open-file (stream file :direction :input)
+    (db:with-transaction ()
+      (loop with database = NIL
+            for expr = (read stream NIL #1='#:eof)
+            until (eq expr #1#)
+            do (ecase expr
+                 (symbol (setf database expr))
+                 (list (db:insert database (alexandria:alist-hash-table expr))))))))

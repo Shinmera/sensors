@@ -135,9 +135,12 @@
 (defun export-db (file)
   (with-open-file (stream file :direction :output :if-exists :supersede)
     (with-standard-io-syntax
-      (let ((*print-right-margin* 10000000))
+      (let ((*print-right-margin* 10000000)
+            (counter 0))
         (flet ((output (record)
-                 (format stream "~s~%" (alexandria:hash-table-alist record))))
+                 (format stream "~s~%" (alexandria:hash-table-alist record))
+                 (when (= 0 (mod (incf counter) 1000))
+                   (format *debug-io* "~d records processed~%" counter))))
           (dolist (database '(device measurement-type supported-type measurement))
             (format stream "~s~%" database)
             (db:iterate database (db:query :all) #'output)))))))
@@ -145,9 +148,15 @@
 (defun import-db (file)
   (with-open-file (stream file :direction :input)
     (db:with-transaction ()
-      (loop with database = NIL
-            for expr = (read stream NIL #1='#:eof)
-            until (eq expr #1#)
-            do (ecase expr
-                 (symbol (setf database expr))
-                 (list (db:insert database (alexandria:alist-hash-table expr))))))))
+      (with-standard-io-syntax
+        (let (database (counter 0))
+          (flet ((insert (record)
+                   (ignore-errors
+                    (db:insert database (alexandria:alist-hash-table record)))
+                   (when (= 0 (mod (incf counter) 1000))
+                     (format *debug-io* "~d records processed~%" counter))))
+            (loop for expr = (read stream NIL #1='#:eof)
+                  until (eq expr #1#)
+                  do (etypecase expr
+                       (symbol (setf database expr))
+                       (list (insert expr))))))))))

@@ -13,6 +13,10 @@
         <canvas></canvas>
         Start: <input name="start" type="datetime-local">
         End: <input name="end" type="datetime-local">
+        <nav iterate="measurement-types" class="measurement-types">
+          <input type="checkbox" name="type[]" lquery="(val _id)" />
+          <a class="name" lquery="(text name)" @href="sensors/type/{0} _id">NAME</a>
+        </nav>
       </form>
     </article>
     <article id="devices">
@@ -20,8 +24,11 @@
       <ul iterate="devices">
         <li>
           <span class="id" lquery="(text _id)">ID</span>
-          <span class="name" lquery="(text name)">NAME</span>
+          <a class="name" lquery="(text name)" @href="sensors/device/{0} device">NAME</a>
           <time class="last" lquery="(time (clip (sensors::last-measurement *) :time))">TIME</time>
+          <nav iterate="(device-measurement-types *)" class="measurement-types">
+            <a class="name" lquery="(text name)" @href="sensors/device/{0}/{1} device type">NAME</a>
+          </nav>
         </li>
       </ul>
       <form @action="/api/sensors/device/create">

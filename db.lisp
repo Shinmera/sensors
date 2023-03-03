@@ -72,26 +72,34 @@
                             ("device" . ,(dm:id (ensure-device device)))
                             ("time" . ,time))))
 
-(defun list-measurements (&key type time amount (skip 0))
-  (cond ((and (null type) (null time))
-         (nreverse (dm:get 'measurement (db:query :all)
-                           :skip skip :amount amount :sort `(("time" :desc)))))
-        ((and time type)
-         (nreverse (dm:get 'measurement (db:query (:and (:= 'type (dm:id (ensure-measurement-type type)))
-                                                        (:>= 'time (car time))
-                                                        (:<= 'time (cdr time))))
-                           :skip skip :amount amount :sort `(("time" :desc)))))
-        (time
-         (nreverse (dm:get 'measurement (db:query (:and (:>= 'time (car time))
-                                                        (:<= 'time (cdr time))))
-                           :skip skip :amount amount :sort `(("time" :desc)))))
-        (type
-         (nreverse (dm:get 'measurement (db:query (:= 'type (dm:id (ensure-measurement-type type))))
-                           :skip skip :amount amount :sort `(("time" :desc)))))))
+(defun list-measurements (&key types devices time amount (skip 0))
+  (let ((time (or time '(0 . #.(1- (ash 1 60))))))
+    (macrolet ((query (&rest clauses)
+                 `(nreverse (dm:get 'measurement (db:query (:and ,@clauses
+                                                                 (:>= 'time (car time))
+                                                                 (:<= 'time (cdr time))))
+                                    :skip skip :amount amount :sort `(("time" :desc))))))
+      (cond ((and types devices)
+             (query (:in 'type (loop for type in types
+                                     collect (dm:id (ensure-measurement-type type))))
+                    (:in 'device (loop for device in devices
+                                       collect (dm:id (ensure-measurement-type device))))))
+            (types
+             (query (:in 'type (loop for type in types
+                                     collect (dm:id (ensure-measurement-type type))))))
+            (devices
+             (query (:in 'device (loop for device in devices
+                                       collect (dm:id (ensure-measurement-type device))))))
+            (T
+             (query))))))
 
 (defun last-measurement (device)
   (dm:get-one 'measurement (db:query (:= 'device (dm:id (ensure-device device))))
               :sort `(("time" :desc))))
+
+(defun device-measurement-types (device)
+  (dm:get (rdb:join (measurement-type _id) (supported-type type)) (db:query (:= device (dm:id (ensure-device device))))
+          :sort `(("name" :asc))))
 
 (define-trigger db:connected ()
   (db:create 'device

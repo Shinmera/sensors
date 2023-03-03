@@ -28,9 +28,12 @@
            for value = (parse-float:parse-float value-string)
            collect (make-measurement device type value :time time)))))
 
-(define-api sensors/measurement/get (&optional type time-start time-stop amount skip) ()
+(define-api sensors/measurement/get (&optional type[] device[] time-start time-stop amount skip) ()
   (output
-   (ht :measurements (list-measurements :type (when type (ensure-measurement-type (or (ignore-errors (db:ensure-id type)) type)))
+   (ht :measurements (list-measurements :types (loop for type in type[]
+                                                     collect (or (ignore-errors (db:ensure-id type)) type))
+                                        :devices (loop for device in device[]
+                                                       collect (or (ignore-errors (db:ensure-id device)) device))
                                         :time (when (or time-start time-stop)
                                                 (cons (or time-start 0) (or time-stop most-positive-fixnum)))
                                         :amount amount

@@ -14,7 +14,8 @@
 
 (define-page dashboard "sensors/" ()
   (r-clip:with-clip-processing ("dashboard.ctml" "text/html")
-    (r-clip:process T :devices (list-devices))))
+    (r-clip:process T :devices (list-devices)
+                      :measurement-types (list-measurement-types))))
 
 (defun format-value (value)
   (format NIL "~,1f" value))

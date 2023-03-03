@@ -21,6 +21,7 @@
         <li>
           <span class="id" lquery="(text _id)">ID</span>
           <span class="name" lquery="(text name)">NAME</span>
+          <time class="last" lquery="(time (clip (sensors::last-measurement *) :time))">TIME</time>
         </li>
       </ul>
       <form @action="/api/sensors/device/create">

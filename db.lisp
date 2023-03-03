@@ -89,6 +89,10 @@
          (nreverse (dm:get 'measurement (db:query (:= 'type (dm:id (ensure-measurement-type type))))
                            :skip skip :amount amount :sort `(("time" :desc)))))))
 
+(defun last-measurement (device)
+  (dm:get-one 'measurement (db:query (:= 'device (dm:id (ensure-device device))))
+              :sort `(("time" :desc))))
+
 (define-trigger db:connected ()
   (db:create 'device
              '((name (:varchar 64)))

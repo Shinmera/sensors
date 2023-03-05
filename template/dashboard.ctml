@@ -14,11 +14,11 @@
           <div class="controls">
             <span class="element">
               <label for="start">Start:</label>
-              <input name="start" type="datetime-local" id="start" lquery='(val (get-var "start"))'>
+              <input name="time-start" type="datetime-local" id="start" lquery='(val (get-var "start"))'>
             </span>
             <span class="element">
               <label for="end">End:</label>
-              <input name="end" type="datetime-local" id="end" lquery='(val (get-var "end"))'>
+              <input name="time-end" type="datetime-local" id="end" lquery='(val (get-var "end"))'>
             </span>
             <span class="element">
               Types:
